@@ -1,5 +1,5 @@
 import math
-import tkinter as tk
+import random
 
 import utils as u
 
@@ -19,6 +19,9 @@ class MyCanvas:
         self.canvas.create_line(source.x, source.y,
                                 dest.x, dest.y)
 
+    def draw_edge(self, edge):
+        self.draw_line(edge.p1, edge.p2)
+
     def draw_circle(self, center, radius, fill=False):
         self.canvas.create_oval(
             center.x - radius, center.y - radius,
@@ -26,13 +29,12 @@ class MyCanvas:
             fill=("black" if fill else None))
 
     def draw_triangle(self, triangle):
-        self.draw_line(triangle.a, triangle.b)
-        self.draw_line(triangle.b, triangle.c)
-        self.draw_line(triangle.a, triangle.c)
+        for edge in triangle.edges():
+            self.draw_edge(edge)
 
     def draw_polygon(self, poly):
         last_point = poly.points[0]
-        for point in poly.points[1:] + [ last_point ]:
+        for point in poly.points[1:] + [last_point]:
             self.draw_line(last_point, point)
             last_point = point
 
@@ -74,7 +76,7 @@ class Edge(u.SimpleEq):
         self.p2 = p2
 
     def points(self):
-        return [ self.p1, self.p2 ]
+        return [self.p1, self.p2]
 
     def __repr__(self):
         return "[eg {}{}]".format(self.p1, self.p2)
@@ -99,6 +101,7 @@ class Triangle:
         self.b = b
         self.c = c
         self.calc_center()
+        self.calc_maps()
 
     def calc_center(self):
         bp = self.b.add(self.a, -1)
@@ -117,41 +120,77 @@ class Triangle:
         self.radius2 = (xx**2 + yy**2) / (denom**2)
         self.radius = math.sqrt(self.radius2)
 
+    def calc_maps(self):
+        edge_ab = Edge(self.a, self.b)
+        edge_bc = Edge(self.b, self.c)
+        edge_ca = Edge(self.c, self.a)
+
+        self.edge_map = {edge_ab: self.c,
+                         edge_bc: self.a,
+                         edge_ca: self.b}
+
+        self.point_map = {self.c: edge_ab,
+                          self.a: edge_bc,
+                          self.b: edge_ca}
+
     def contains(self, p):
-        denom = (self.b.y - self.c.y)*(self.a.x - self.c.x) + (self.c.x - self.b.x)*(self.a.y - self.c.y)
-        s = ((self.b.y - self.c.y)*(p.x - self.c.x) + (self.c.x - self.b.x)*(p.y - self.c.y)) / denom
-        t = ((self.c.y - self.a.y)*(p.x - self.c.x) + (self.a.x - self.c.x)*(p.y - self.c.y)) / denom
+        denom = (self.b.y - self.c.y)*(self.a.x - self.c.x) + \
+                (self.c.x - self.b.x)*(self.a.y - self.c.y)
+        s = ((self.b.y - self.c.y)*(p.x - self.c.x) +
+             (self.c.x - self.b.x)*(p.y - self.c.y)) / denom
+        t = ((self.c.y - self.a.y)*(p.x - self.c.x) +
+             (self.a.x - self.c.x)*(p.y - self.c.y)) / denom
         r = 1 - s - t
         return all((0 <= s, s <= 1, 0 <= t,
-                   t <= 1, 0 <= r, r <= 1))
+                    t <= 1, 0 <= r, r <= 1))
 
     def circum_contains(self, p):
         return self.center.dist2(p) <= self.radius2
 
     def points(self):
-        return [ self.a, self.b, self.c ]
+        return [self.a, self.b, self.c]
 
     def edges(self):
-        return [ Edge(self.a, self.b), Edge(self.b, self.c), Edge(self.c, self.a) ]
+        return self.edge_map.keys()
+
+    def edge_antipoint(self, edge):
+        return self.edge_map[edge]
+
+    def point_antiedge(self, point):
+        return self.point_map[point]
 
     def __repr__(self):
         return "[tr {}{}{}]".format(self.a, self.b, self.c)
 
 
-class Poly:
+class Polygon:
 
     def __init__(self, *points):
         self.points = list(points)
 
     def area(self):
-        return sum([ (p.x*pp.y - pp.x*p.y) for (p,pp) in zip(self.points, self.points[1:] + self.points[0:1]) ]) / 2
+        return sum([(p.x*pp.y - pp.x*p.y) for (p, pp) in
+                    zip(self.points, self.points[1:] + self.points[0:1])]) / 2
 
     def centroid(self):
         area = self.area()
-        spoints = self.points[1:] + self.points[0:1]
-        cx = sum([ (p.x + pp.x)*(p.x*pp.y - pp.x*p.y) for (p,pp) in zip(self.points, self.points[1:] + self.points[0:1]) ])
-        cy = sum([ (p.y + pp.y)*(p.x*pp.y - pp.x*p.y) for (p,pp) in zip(self.points, self.points[1:] + self.points[0:1]) ])
+        cx = sum([(p.x + pp.x)*(p.x*pp.y - pp.x*p.y) for (p, pp) in
+                  zip(self.points, self.points[1:] + self.points[0:1])])
+        cy = sum([(p.y + pp.y)*(p.x*pp.y - pp.x*p.y) for (p, pp) in
+                  zip(self.points, self.points[1:] + self.points[0:1])])
         return Point(cx / (6 * area), cy / (6 * area))
 
     def __repr__(self):
         return "[pl {}]".format(self.points)
+
+
+def generate_points(count, xrange, yrange):
+    print("Generating", count, "points")
+
+    def random_point(idx):
+        return Point(
+            random.uniform(xrange[0], xrange[1]),
+            random.uniform(yrange[0], yrange[1]),
+            "p{}".format(idx))
+
+    return [random_point(idx + 1) for idx in range(count)]

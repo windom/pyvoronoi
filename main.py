@@ -1,9 +1,12 @@
-import random as rng
+import random
 import tkinter as tk
 
-import utils as u
 import graphics as gr
 import voronoi as vr
+
+MAX_WIDTH = 700
+MAX_HEIGHT = 600
+PADDING = 20
 
 
 class DrawingApp(tk.Frame):
@@ -35,21 +38,35 @@ def createRoot(width, height, title='Drawing'):
     return root
 
 
+def calculate():
+    random.seed(233)
+
+    points = gr.generate_points(100,
+                                (PADDING, MAX_WIDTH - PADDING),
+                                (PADDING, MAX_HEIGHT - PADDING))
+
+    vor = vr.Voronoi(points).floyd_relaxation()
+
+    return vor
+
+
+def draw(canvas, data):
+    vor = data
+
+    for point in vor.points:
+        canvas.draw_point(point)
+
+    for edge in vor.edges:
+        canvas.draw_edge(edge)
+
+
 def main():
-
-    u.log_enabled = False
-    rng.seed(233)
-
-    root = createRoot(vr.MAX_WIDTH, vr.MAX_HEIGHT)
+    data = calculate()
+    root = createRoot(MAX_WIDTH, MAX_HEIGHT)
     app = DrawingApp(master=root)
-
-    gen = vr.Generator(1000)
-
-    ps = gen.floyd_points()
-    gen = vr.Generator(100, ps)
-    gen.draw(app.canvas)
-
+    draw(app.canvas, data)
     root.mainloop()
+
 
 if __name__ == '__main__':
     main()
