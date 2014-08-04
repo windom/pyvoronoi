@@ -32,11 +32,9 @@ class MyCanvas:
         for edge in triangle.edges():
             self.draw_edge(edge)
 
-    def draw_polygon(self, poly):
-        last_point = poly.points[0]
-        for point in poly.points[1:] + [last_point]:
-            self.draw_line(last_point, point)
-            last_point = point
+    def draw_polygon(self, poly, fill=None, outline=None):
+        self.canvas.create_polygon(list(map(lambda point: (point.x, point.y), poly.points)),
+                                   fill=fill, outline=outline)
 
 
 class Point(u.SimpleEq):
@@ -194,3 +192,10 @@ def generate_points(count, xrange, yrange):
             "p{}".format(idx))
 
     return [random_point(idx + 1) for idx in range(count)]
+
+def weighted_color(from_rgb, to_rgb):
+    def get_color(weight):
+        return (int(from_rgb[0] + weight*(to_rgb[0] - from_rgb[0])),
+                int(from_rgb[1] + weight*(to_rgb[1] - from_rgb[1])),
+                int(from_rgb[2] + weight*(to_rgb[2] - from_rgb[2])))
+    return get_color

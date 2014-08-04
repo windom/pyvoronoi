@@ -13,8 +13,18 @@ class Voronoi(dl.Delaunay):
             if len(tris) == 2:
                 self.edges.append(gr.Edge(tris[0].center, tris[1].center))
 
+        print("Creating polygons")
+        self.polygons = {point: self.get_polygon(point) for point in self.points}
+
+    def trimmed_polygons(self, xrange, yrange):
+        res = []
+        for poly in self.polygons.values():
+            if all(map(lambda pt: pt.x >= xrange[0] and pt.x <= xrange[1] and pt.y >= yrange[0] and pt.y <= yrange[1], poly.points)):
+                res.append(poly)
+        return res
+
     def floyd_relaxation(self):
-        floyd_points = list(map(lambda point: self.get_polygon(point).centroid(), self.points))
+        floyd_points = [poly.centroid() for poly in self.polygons.values()]
         return Voronoi(floyd_points)
 
     def get_polygon(self, point):

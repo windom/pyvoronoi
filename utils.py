@@ -1,3 +1,6 @@
+import binascii
+import struct
+
 class SimpleEq:
 
     def __eq__(self, other):
@@ -20,3 +23,6 @@ def make_progressbar(steps):
             step[1] = percent
 
     return do_step
+
+def rgb_to_hex(*rgb):
+    return "#" + binascii.hexlify(struct.pack('BBB', *rgb)).decode('ascii')

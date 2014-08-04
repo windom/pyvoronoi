@@ -1,6 +1,7 @@
 import random
 import tkinter as tk
 
+import utils
 import graphics as gr
 import voronoi as vr
 
@@ -39,13 +40,13 @@ def createRoot(width, height, title='Drawing'):
 
 
 def calculate():
-    random.seed(233)
+    #random.seed(233)
 
-    points = gr.generate_points(100,
+    points = gr.generate_points(200,
                                 (PADDING, MAX_WIDTH - PADDING),
                                 (PADDING, MAX_HEIGHT - PADDING))
 
-    vor = vr.Voronoi(points).floyd_relaxation()
+    vor = vr.Voronoi(points)#.floyd_relaxation()
 
     return vor
 
@@ -53,12 +54,21 @@ def calculate():
 def draw(canvas, data):
     vor = data
 
-    for point in vor.points:
-        canvas.draw_point(point)
+    polys = vor.trimmed_polygons((PADDING, MAX_WIDTH - PADDING), (PADDING, MAX_HEIGHT - PADDING))
 
-    for edge in vor.edges:
-        canvas.draw_edge(edge)
+    maxarea = max(map(lambda poly: abs(poly.area()), polys))
+    minarea = min(map(lambda poly: abs(poly.area()), polys))
 
+    #get_color = gr.weighted_color((20,20,138), (140,140,198))
+    #get_color = gr.weighted_color((236,57,50), (148,18,18))
+    get_color = gr.weighted_color((38,63,93), (184,210,221))
+
+    for poly in polys:
+        weight = (abs(poly.area()) - minarea) / (maxarea - minarea)
+        canvas.draw_polygon(poly, fill=utils.rgb_to_hex(*get_color(weight)))
+
+    # for point in vor.points:
+    #     canvas.draw_point(point)
 
 def main():
     data = calculate()
