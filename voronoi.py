@@ -16,15 +16,15 @@ class Voronoi(dl.Delaunay):
         print("Creating polygons")
         self.polygons = {point: self.get_polygon(point) for point in self.points}
 
-    def trimmed_polygons(self, xrange, yrange):
-        res = []
-        for poly in self.polygons.values():
-            if all(map(lambda pt: pt.x >= xrange[0] and pt.x <= xrange[1] and pt.y >= yrange[0] and pt.y <= yrange[1], poly.points)):
-                res.append(poly)
-        return res
+    def compact_polygons(self, xrange, yrange):
+        def compact_point(point):
+            x = min(max(point.x, xrange[0]), xrange[1])
+            y = min(max(point.y, yrange[0]), yrange[1])
+            return gr.Point(x, y)
+        self.polygons = {point: gr.Polygon(*map(compact_point, poly.points)) for (point,poly) in self.polygons.items()}
 
     def floyd_relaxation(self):
-        floyd_points = [poly.centroid() for poly in self.polygons.values()]
+        floyd_points = [poly.centroid for poly in self.polygons.values()]
         return Voronoi(floyd_points)
 
     def get_polygon(self, point):

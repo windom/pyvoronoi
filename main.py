@@ -21,6 +21,8 @@ class DrawingApp(tk.Frame):
         canvas.pack(fill=tk.BOTH, expand=1)
         self.canvas = gr.MyCanvas(canvas)
 
+        # w = tk.Text(self, height=5)
+        # w.pack(fill=tk.X)
 
 def createRoot(width, height, title='Drawing'):
     root = tk.Tk()
@@ -42,11 +44,17 @@ def createRoot(width, height, title='Drawing'):
 def calculate():
     #random.seed(233)
 
-    points = gr.generate_points(200,
-                                (PADDING, MAX_WIDTH - PADDING),
-                                (PADDING, MAX_HEIGHT - PADDING))
+    points = 100
+    relaxation = 3
+    xrange = (PADDING, MAX_WIDTH - PADDING)
+    yrange = (PADDING, MAX_HEIGHT - PADDING)
 
-    vor = vr.Voronoi(points)#.floyd_relaxation()
+    vor = vr.Voronoi(gr.generate_points(points, xrange, yrange))
+    vor.compact_polygons(xrange, yrange)
+
+    for _ in range(relaxation):
+        vor = vor.floyd_relaxation()
+        vor.compact_polygons(xrange, yrange)
 
     return vor
 
@@ -54,18 +62,25 @@ def calculate():
 def draw(canvas, data):
     vor = data
 
-    polys = vor.trimmed_polygons((PADDING, MAX_WIDTH - PADDING), (PADDING, MAX_HEIGHT - PADDING))
+    polys = vor.polygons.values()
 
-    maxarea = max(map(lambda poly: abs(poly.area()), polys))
-    minarea = min(map(lambda poly: abs(poly.area()), polys))
+    maxarea = max(map(lambda poly: abs(poly.area), polys))
+    minarea = min(map(lambda poly: abs(poly.area), polys))
 
-    #get_color = gr.weighted_color((20,20,138), (140,140,198))
-    #get_color = gr.weighted_color((236,57,50), (148,18,18))
-    get_color = gr.weighted_color((38,63,93), (184,210,221))
+    outline_color = None
+
+    get_color = gr.weighted_color((20,20,138), (140,140,198))
+    # outline_color = utils.rgb_to_hex(20,20,138)
+
+    # get_color = gr.weighted_color((236,57,50), (148,18,18))
+    # outline_color = utils.rgb_to_hex(148,18,18)
+
+    # get_color = gr.weighted_color((38,63,93), (184,210,221))
+    # outline_color = utils.rgb_to_hex(38,63,93)
 
     for poly in polys:
-        weight = (abs(poly.area()) - minarea) / (maxarea - minarea)
-        canvas.draw_polygon(poly, fill=utils.rgb_to_hex(*get_color(weight)))
+        weight = (abs(poly.area) - minarea) / (maxarea - minarea)
+        canvas.draw_polygon(poly, fill=utils.rgb_to_hex(*get_color(weight)), outline=outline_color)
 
     # for point in vor.points:
     #     canvas.draw_point(point)
