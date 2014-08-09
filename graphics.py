@@ -165,18 +165,25 @@ class Polygon:
 
     def __init__(self, *points):
         self.points = list(points)
+        self.calc_area()
+        self.calc_centroid()
 
-    def area(self):
-        return sum([(p.x*pp.y - pp.x*p.y) for (p, pp) in
-                    zip(self.points, self.points[1:] + self.points[0:1])]) / 2
+    def calc_area(self):
+        self.area = sum([(p.x*pp.y - pp.x*p.y) for (p, pp) in
+                        zip(self.points, self.points[1:] + self.points[0:1])]) / 2
 
-    def centroid(self):
-        area = self.area()
+    def calc_centroid(self):
+        #
+        # TODO: degenerate polygons should be handled properly
+        #
+        if self.area == 0:
+            self.centroid = self.points[0]
+            return
         cx = sum([(p.x + pp.x)*(p.x*pp.y - pp.x*p.y) for (p, pp) in
                   zip(self.points, self.points[1:] + self.points[0:1])])
         cy = sum([(p.y + pp.y)*(p.x*pp.y - pp.x*p.y) for (p, pp) in
                   zip(self.points, self.points[1:] + self.points[0:1])])
-        return Point(cx / (6 * area), cy / (6 * area))
+        self.centroid = Point(cx / (6 * self.area), cy / (6 * self.area))
 
     def __repr__(self):
         return "[pl {}]".format(self.points)
