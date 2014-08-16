@@ -29,6 +29,13 @@ class Kdtree(collections.namedtuple('Kdtree', ['point', 'left', 'right'])):
     def nearest_point(self, point):
         return self.nearest[0]
 
+    def points(self):
+        yield self.point
+        if self.left:
+            yield from self.left.points()
+        if self.right:
+            yield from self.right.points()
+
 
 def dist(p1, p2):
     return sum((c1 - c2)**2 for (c1, c2) in zip(p1, p2))
@@ -47,7 +54,27 @@ def insert_point(kdtree, point, axis=0):
     else:
         return Kdtree(point=point, left=None, right=None)
 
-def test(point_count=100, test_count=50):
+def remove_point(kdtree, point, axis=0):
+    if kdtree:
+        next_axis = (axis + 1) % len(point)
+        if kdtree.point == point:
+            stree = None
+            for spoint in kdtree.points():
+                if spoint != point:
+                    stree = insert_point(stree, spoint, axis)
+            return stree
+        elif point[axis] < kdtree.point[axis]:
+            return Kdtree(point=kdtree.point,
+                          left=remove_point(kdtree.left, point, next_axis),
+                          right=kdtree.right)
+        else:
+            return Kdtree(point=kdtree.point,
+                          left=kdtree.left,
+                          right=remove_point(kdtree.right, point, next_axis))
+    else:
+        return None
+
+def test(point_count=1000, test_count=100):
     def random_point():
         return (random.uniform(0, 100), random.uniform(0, 100))
 
@@ -69,5 +96,12 @@ def test(point_count=100, test_count=50):
         nf = nearest_fix(qpoint)
         nt = nearest_tree(qpoint)
         assert(nf[1] == nt[1])
+        #
+        # remove too
+        #
+        rp = random.choice(points)
+        points.remove(rp)
+        kdtree = remove_point(kdtree, rp)
+
 
 test()
