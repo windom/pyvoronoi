@@ -1,5 +1,6 @@
 import math
 import random
+import svgwrite
 
 import utils as u
 
@@ -36,6 +37,25 @@ class MyCanvas:
         self.canvas.create_polygon(list(map(lambda point: (point.x, point.y), poly.points)),
                                    fill=fill, outline=outline)
 
+
+class SvgCanvas:
+
+    def __init__(self, name):
+        self.dwg = svgwrite.Drawing(name, profile='tiny')
+
+    def draw_polygon(self, poly, **opts):
+        def make_command(type, point):
+            return "{} {} {}".format(type, point.x, point.y)
+        scommands = [make_command('M', poly.points[0])] + \
+                    [make_command('L', point) for point in poly.points[1:]] + \
+                    ['z']
+        self.dwg.add(self.dwg.path(scommands, **opts))
+
+    def draw_point(self, point, **opts):
+        self.dwg.add(self.dwg.circle(center=(point.x, point.y), r=1, **opts))
+
+    def save(self):
+        self.dwg.save()
 
 class Point(u.SimpleEq):
 

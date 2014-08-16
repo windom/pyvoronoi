@@ -1,6 +1,9 @@
+import time
 import random
 import tkinter as tk
 import math
+
+import svgwrite
 
 import utils
 import graphics as gr
@@ -50,7 +53,10 @@ def setup_drawing():
     #get_color = gr.weighted_color((38,63,93), (184,210,221))
     #outline_color = utils.rgb_to_hex(38,63,93)
 
-    return (draw_mode, draw_points, area_bounds, outline_color, get_color)
+    #do_svg = True
+    do_svg = False
+
+    return (draw_mode, draw_points, area_bounds, outline_color, get_color, do_svg)
 
 ###########################################################################
 
@@ -143,7 +149,10 @@ def calculate():
 def draw(canvas, data):
     vor = data
 
-    (draw_mode, draw_points, area_bounds, outline_color, get_color) = setup_drawing()
+    (draw_mode, draw_points, area_bounds, outline_color, get_color, do_svg) = setup_drawing()
+
+    if do_svg:
+        svgCanvas = gr.SvgCanvas("svg/" + time.strftime("%Y_%m_%d_%H_%M_%S.svg", time.localtime()) + ".svg")
 
     if draw_mode == 'voronoi':
         polys = vor.polygons.values()
@@ -163,7 +172,7 @@ def draw(canvas, data):
 
     maxarea = max(areas)
     minarea = min(areas)
-    avgarea = sum(areas) / len(polys)
+    avgarea = sum(areas) / len(areas)
 
     print("Areas: min={}, max={}, avg={}".format(minarea, maxarea, avgarea))
 
@@ -172,12 +181,21 @@ def draw(canvas, data):
         if (not area_bounds) or (area_bounds[0] <= area <= area_bounds[1]):
             weight = (area - minarea) / (maxarea - minarea)
             canvas.draw_polygon(poly, fill=utils.rgb_to_hex(*get_color(weight)), outline=outline_color)
+            if do_svg:
+                svgCanvas.draw_polygon(poly, fill=utils.rgb_to_hex(*get_color(weight)), stroke=outline_color)
         else:
             canvas.draw_polygon(poly, fill="#ffffff", outline=outline_color)
+            if do_svg:
+                svgCanvas.draw_polygon(poly, fill="#ffffff", stroke=outline_color)
 
     if draw_points:
         for point in vor.points:
             canvas.draw_point(point)
+            if do_svg:
+                svgCanvas.draw_point(point)
+
+    if do_svg:
+        svgCanvas.save()
 
 def main():
     data = calculate()
