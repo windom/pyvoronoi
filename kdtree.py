@@ -27,7 +27,7 @@ class Kdtree(collections.namedtuple('Kdtree', ['point', 'left', 'right'])):
         return best
 
     def nearest_point(self, point):
-        return self.nearest[0]
+        return self.nearest(point)[0]
 
     def points(self):
         yield self.point
