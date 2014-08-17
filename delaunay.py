@@ -1,7 +1,10 @@
 import math
 import itertools
+import time
+import collections
 
 import graphics as gr
+import kdtree as kd
 import utils
 
 
@@ -15,11 +18,19 @@ class Delaunay:
         self.triangles = [initial_tri]
         self.edge_map = {edge: [initial_tri] for edge in initial_tri.edges()}
 
+        #
+        # maintain a K-D tree of points
+        #
+        self.kdtree = None
+        self.point_map = collections.defaultdict(list)
+
         print("Inserting points")
+        tm = time.time()
         progressbar = utils.make_progressbar(len(self.points))
         for point in self.points:
             self.insert_point(point)
             progressbar()
+        print("Insertion took", time.time() - tm, "seconds")
 
         print("Testing triangles")
         self.test_triangles()
@@ -36,12 +47,15 @@ class Delaunay:
     def insert_point(self, point):
         tri = self.find_triangle(point)
 
+        self.kdtree = kd.insert_point(self.kdtree, (point.x, point.y))
+
         new_tris = [gr.Triangle(tri.a, tri.b, point),
                     gr.Triangle(tri.b, tri.c, point),
                     gr.Triangle(tri.a, tri.c, point)]
 
-        self.triangles += new_tris
-        self.triangles.remove(tri)
+        for new_tri in new_tris:
+            self.add_triangle(new_tri)
+        self.remove_triangle(tri)
 
         self.update_edge_map(gr.Edge(tri.a, tri.b), tri, new_tris[0])
         self.update_edge_map(gr.Edge(tri.b, tri.c), tri, new_tris[1])
@@ -71,9 +85,10 @@ class Delaunay:
 
         new_tris = [gr.Triangle(edge.p1, *apts), gr.Triangle(edge.p2, *apts)]
 
-        self.triangles.remove(tris[0])
-        self.triangles.remove(tris[1])
-        self.triangles += new_tris
+        self.remove_triangle(tris[0])
+        self.remove_triangle(tris[1])
+        self.add_triangle(new_tris[0])
+        self.add_triangle(new_tris[1])
 
         self.update_edge_map(tris[0].point_antiedge(edge.p1),
                              tris[0], new_tris[1])
@@ -91,8 +106,28 @@ class Delaunay:
             if edge not in inspected_set:
                 inspect_queue.append(edge)
 
+    def add_triangle(self, tri):
+        self.triangles.append(tri)
+        for point in tri.points():
+            self.point_map[(point.x, point.y)].append(tri)
+
+    def remove_triangle(self, tri):
+        self.triangles.remove(tri)
+        try:
+            for point in tri.points():
+                self.point_map[(point.x, point.y)].remove(tri)
+        except ValueError:
+            print("--------->",tri)
+
     def find_triangle(self, point):
-        return next(tri for tri in self.triangles if tri.contains(point))
+        if self.kdtree:
+            x, y = self.kdtree.nearest_point((point.x, point.y))
+            for tri in self.point_map[(x,y)]:
+                if tri.contains(point):
+                    return tri
+            return next(tri for tri in self.triangles if tri.contains(point))
+        else:
+            return self.triangles[0]
 
     def update_edge_map(self, edge, old_tri, new_tri):
         tris = self.edge_map[edge]
