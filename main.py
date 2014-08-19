@@ -138,6 +138,7 @@ def calculate():
     (relaxation, points) = setup_points()
 
     vor = vr.Voronoi(points)
+    vor.process()
     vor.compact_polygons(XRANGE, YRANGE)
 
     for _ in range(relaxation):

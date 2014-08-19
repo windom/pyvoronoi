@@ -2,10 +2,13 @@ import graphics as gr
 import delaunay as dl
 
 
-class Voronoi(dl.Delaunay):
+class Voronoi(dl.DelaunayKd):
 
     def __init__(self, points):
         super().__init__(points)
+
+    def process(self):
+        super().process()
 
         print("Creating edges")
         self.edges = []

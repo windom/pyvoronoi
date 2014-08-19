@@ -12,17 +12,13 @@ class Delaunay:
 
     def __init__(self, points):
         self.points = points
-        print("Will create triangulation for", len(points), "points")
+
+    def process(self):
+        print("Will create triangulation for", len(self.points), "points")
 
         initial_tri = gr.Triangle(*self.container_points())
         self.triangles = [initial_tri]
         self.edge_map = {edge: [initial_tri] for edge in initial_tri.edges()}
-
-        #
-        # maintain a K-D tree of points
-        #
-        self.kdtree = None
-        self.point_map = collections.defaultdict(list)
 
         print("Inserting points")
         tm = time.time()
@@ -46,8 +42,6 @@ class Delaunay:
 
     def insert_point(self, point):
         tri = self.find_triangle(point)
-
-        self.kdtree = kd.insert_point(self.kdtree, (point.x, point.y))
 
         new_tris = [gr.Triangle(tri.a, tri.b, point),
                     gr.Triangle(tri.b, tri.c, point),
@@ -108,26 +102,12 @@ class Delaunay:
 
     def add_triangle(self, tri):
         self.triangles.append(tri)
-        for point in tri.points():
-            self.point_map[(point.x, point.y)].append(tri)
 
     def remove_triangle(self, tri):
         self.triangles.remove(tri)
-        try:
-            for point in tri.points():
-                self.point_map[(point.x, point.y)].remove(tri)
-        except ValueError:
-            print("--------->",tri)
 
     def find_triangle(self, point):
-        if self.kdtree:
-            x, y = self.kdtree.nearest_point((point.x, point.y))
-            for tri in self.point_map[(x,y)]:
-                if tri.contains(point):
-                    return tri
-            return next(tri for tri in self.triangles if tri.contains(point))
-        else:
-            return self.triangles[0]
+        return next(tri for tri in self.triangles if tri.contains(point))
 
     def update_edge_map(self, edge, old_tri, new_tri):
         tris = self.edge_map[edge]
@@ -146,3 +126,40 @@ class Delaunay:
         for tri in self.triangles:
             for edge in tri.edges():
                 test_edge(edge)
+
+
+class DelaunayKd(Delaunay):
+
+    def __init__(self, points):
+        super().__init__(points)
+
+    def process(self):
+        self.kdtree = None
+        self.point_map = collections.defaultdict(list)
+        super().process()
+
+    def add_triangle(self, tri):
+        super().add_triangle(tri)
+        for point in tri.points():
+            self.point_map[(point.x, point.y)].append(tri)
+
+    def remove_triangle(self, tri):
+        super().remove_triangle(tri)
+        try:
+            for point in tri.points():
+                self.point_map[(point.x, point.y)].remove(tri)
+        except ValueError:
+            print("--------->", tri)
+
+    def find_triangle(self, point):
+        try:
+            if self.kdtree:
+                x, y = self.kdtree.nearest_point((point.x, point.y))
+                for tri in self.point_map[(x,y)]:
+                    if tri.contains(point):
+                        return tri
+                return super().find_triangle(point)
+            else:
+                return self.triangles[0]
+        finally:
+            self.kdtree = kd.insert_point(self.kdtree, (point.x, point.y))
