@@ -4,15 +4,20 @@ import tkinter as tk
 import math
 
 import svgwrite
+from PIL import Image
 
 import utils
 import graphics as gr
 import voronoi as vr
+import rasterizer as ras
 
 ###########################################################################
 
 def setup_points():
     relaxation = 0
+
+    #photo = None
+    photo = init_photo("oldtree.jpg")
 
     #random.seed(100)
     #points = gr.generate_points(50, XRANGE, YRANGE)
@@ -26,26 +31,27 @@ def setup_points():
 
     #points = grid_points(size=50)
 
-    return (relaxation, points)
+    return (relaxation, points, photo)
 
 def setup_drawing():
-    draw_mode = 'voronoi';
-    #draw_mode = 'tri-center';
-    #draw_mode = 'tri-delaunay';
+    #draw_mode = 'voronoi'
+    #draw_mode = 'tri-center'
+    #draw_mode = 'tri-delaunay'
+    draw_mode = 'photo'
 
     #draw_points = True
     draw_points = False
 
-    #area_bounds = None
-    area_bounds = (100,1700)
+    area_bounds = None
+    #area_bounds = (100,1700)
 
     outline_color = None
 
-    #outline_color = utils.rgb_to_hex(0,0,0)
-    #get_color = lambda _: (255,255,255)
+    outline_color = utils.rgb_to_hex(0,0,0)
+    get_color = lambda _: (255,255,255)
 
-    get_color = gr.weighted_color((20,20,138), (140,140,198))
-    outline_color = utils.rgb_to_hex(20,20,138)
+    #get_color = gr.weighted_color((20,20,138), (140,140,198))
+    #outline_color = utils.rgb_to_hex(20,20,138)
 
     #get_color = gr.weighted_color((236,57,50), (148,18,18))
     #outline_color = utils.rgb_to_hex(148,18,18)
@@ -62,7 +68,7 @@ def setup_drawing():
 
 MAX_WIDTH = 670
 MAX_HEIGHT = 670
-PADDING = 10
+PADDING = 11
 
 XRANGE = (PADDING, MAX_WIDTH - PADDING)
 YRANGE = (PADDING, MAX_HEIGHT - PADDING)
@@ -134,8 +140,16 @@ def grid_points(size):
             points.append(gr.Point(x + dx, y))
     return points
 
+def init_photo(name):
+    image = Image.open("imgs/" + name)
+    MAX_WIDTH = image.size[0] + 2*(PADDING - 1)
+    MAX_HEIGHT = image.size[1] + 2*(PADDING - 1)
+    XRANGE = (PADDING, MAX_WIDTH - PADDING)
+    YRANGE = (PADDING, MAX_HEIGHT - PADDING)
+    return image.load()
+
 def calculate():
-    (relaxation, points) = setup_points()
+    (relaxation, points, photo) = setup_points()
 
     vor = vr.Voronoi(points)
     vor.process()
@@ -143,12 +157,13 @@ def calculate():
 
     for _ in range(relaxation):
         vor = vor.floyd_relaxation()
+        vor.process()
         vor.compact_polygons(XRANGE, YRANGE)
 
-    return vor
+    return (vor, photo)
 
 def draw(canvas, data):
-    vor = data
+    vor, photo = data
 
     (draw_mode, draw_points, area_bounds, outline_color, get_color, do_svg) = setup_drawing()
 
@@ -163,6 +178,8 @@ def draw(canvas, data):
         for poly in polys:
             newpolys.extend([gr.Polygon(p1,p2,poly.centroid) for (p1,p2) in zip(poly.points, poly.points[1:] + poly.points[0:1])])
         polys = [poly for poly in newpolys if all(map(lambda p: XRANGE[0] <= p.x <= XRANGE[1] and YRANGE[0] <= p.y <= YRANGE[1], poly.points))]
+    elif draw_mode == 'photo':
+        polys = vor.polygons.values()
     else:
         polys = [gr.Polygon(tri.a, tri.b, tri.c) for tri in vor.triangles \
                     if all(map(lambda p: XRANGE[0] <= p.x <= XRANGE[1] and YRANGE[0] <= p.y <= YRANGE[1], [tri.a, tri.b, tri.c]))]
@@ -177,17 +194,34 @@ def draw(canvas, data):
 
     print("Areas: min={}, max={}, avg={}".format(minarea, maxarea, avgarea))
 
-    for poly in polys:
-        area = abs(poly.area)
-        if (not area_bounds) or (area_bounds[0] <= area <= area_bounds[1]):
-            weight = (area - minarea) / (maxarea - minarea)
-            canvas.draw_polygon(poly, fill=utils.rgb_to_hex(*get_color(weight)), outline=outline_color)
-            if do_svg:
-                svgCanvas.draw_polygon(poly, fill=utils.rgb_to_hex(*get_color(weight)), stroke=outline_color)
-        else:
-            canvas.draw_polygon(poly, fill="#ffffff", outline=outline_color)
-            if do_svg:
-                svgCanvas.draw_polygon(poly, fill="#ffffff", stroke=outline_color)
+    if draw_mode == 'photo':
+        for poly in polys:
+            pts = [(pt.x-PADDING, pt.y-PADDING) for pt in poly.points]
+            rs = gs = bs = cnt = 0
+            for x,y in ras.rasterize(pts):
+                r, g, b = photo[x,y]
+                rs += r
+                gs += g
+                bs += b
+                cnt += 1
+            if cnt > 0:
+                color = utils.rgb_to_hex(int(rs/cnt),int(gs/cnt),int(bs/cnt))
+                color2 = utils.rgb_to_hex(min(int(rs/cnt)+20,255),min(int(gs/cnt)+20,255),min(int(bs/cnt)+20,255))
+                canvas.draw_polygon(poly, fill=color, outline=color2)
+                if do_svg:
+                    svgCanvas.draw_polygon(poly, fill=color, stroke=color2)
+    else:
+        for poly in polys:
+            area = abs(poly.area)
+            if (not area_bounds) or (area_bounds[0] <= area <= area_bounds[1]):
+                weight = (area - minarea) / (maxarea - minarea)
+                canvas.draw_polygon(poly, fill=utils.rgb_to_hex(*get_color(weight)), outline=outline_color)
+                if do_svg:
+                    svgCanvas.draw_polygon(poly, fill=utils.rgb_to_hex(*get_color(weight)), stroke=outline_color)
+            else:
+                canvas.draw_polygon(poly, fill="#ffffff", outline=outline_color)
+                if do_svg:
+                    svgCanvas.draw_polygon(poly, fill="#ffffff", stroke=outline_color)
 
     if draw_points:
         for point in vor.points:
@@ -204,7 +238,6 @@ def main():
     app = DrawingApp(master=root)
     draw(app.canvas, data)
     root.mainloop()
-
 
 if __name__ == '__main__':
     main()
