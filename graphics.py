@@ -239,3 +239,11 @@ def weighted_color(from_rgb, to_rgb):
                 int(from_rgb[1] + weight*(to_rgb[1] - from_rgb[1])),
                 int(from_rgb[2] + weight*(to_rgb[2] - from_rgb[2])))
     return get_color
+
+def offset_color(rgb, offset):
+    def offset_component(color_comp):
+        return max(min(color_comp, 255), 0)
+    r, g, b = rgb
+    return (offset_component(r + offset),
+            offset_component(g + offset),
+            offset_component(b + offset))

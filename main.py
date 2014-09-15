@@ -206,8 +206,9 @@ def draw(canvas, data):
                 bs += b
                 cnt += 1
             if cnt > 0:
-                color = utils.rgb_to_hex(int(rs/cnt),int(gs/cnt),int(bs/cnt))
-                color2 = utils.rgb_to_hex(min(int(rs/cnt)+20,255),min(int(gs/cnt)+20,255),min(int(bs/cnt)+20,255))
+                rs, gs, bs = int(rs/cnt), int(gs/cnt), int (bs/cnt)
+                color = utils.rgb_to_hex(rs, gs, bs)
+                color2 = utils.rgb_to_hex(*gr.offset_color((rs, gs, bs), 20))
                 canvas.draw_polygon(poly, fill=color, outline=color2)
                 if do_svg:
                     grad = svgCanvas.create_gradient(color, color2)
