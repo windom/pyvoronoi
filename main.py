@@ -13,6 +13,9 @@ import rasterizer as ras
 
 ###########################################################################
 
+RECT_WIDTH = 20
+RECT_HEIGHT = 15
+
 def setup_points():
     relaxation = 0
 
@@ -26,10 +29,13 @@ def setup_points():
     #points = spiral_points(radius_i=2, radius_i2=0, turns=170)
 
     #points = circle_points(radius_i=20, radius_i2=-1, angle_fractions=9, turns=30, antisymm=0)
-    points = circle_points(radius_i=20, radius_i2=0, angle_fractions=9, turns=15, antisymm=0)
+    #points = circle_points(radius_i=20, radius_i2=0, angle_fractions=9, turns=15, antisymm=0)
     #points = circle_points(radius_i=20, radius_i2=-1, angle_fractions=18, turns=15, antisymm=3)
 
     #points = grid_points(size=50)
+
+    # Negyzetes
+    points = []
 
     return (relaxation, points, photo)
 
@@ -37,7 +43,8 @@ def setup_drawing():
     #draw_mode = 'voronoi'
     #draw_mode = 'tri-center'
     #draw_mode = 'tri-delaunay'
-    draw_mode = 'photo'
+    #draw_mode = 'photo'
+    draw_mode = 'rectangles'
 
     #draw_points = True
     draw_points = False
@@ -126,14 +133,24 @@ def init_photo(name):
 def calculate():
     (relaxation, points, photo) = setup_points()
 
-    vor = vr.Voronoi(points)
-    vor.process()
-    vor.compact_polygons(XRANGE, YRANGE)
-
-    for _ in range(relaxation):
-        vor = vor.floyd_relaxation()
+    if points:
+        vor = vr.Voronoi(points)
         vor.process()
         vor.compact_polygons(XRANGE, YRANGE)
+
+        for _ in range(relaxation):
+            vor = vor.floyd_relaxation()
+            vor.process()
+            vor.compact_polygons(XRANGE, YRANGE)
+    else:
+        vor = []
+        for x in range(XRANGE[0], XRANGE[1]-RECT_WIDTH+1, RECT_WIDTH):
+            for y in range(YRANGE[0], YRANGE[1]-RECT_HEIGHT+1, RECT_HEIGHT):
+                poly = gr.Polygon(gr.Point(x, y),
+                                  gr.Point(x + RECT_WIDTH, y),
+                                  gr.Point(x + RECT_WIDTH, y + RECT_HEIGHT),
+                                  gr.Point(x, y + RECT_HEIGHT))
+                vor.append(poly)
 
     return (vor, photo)
 
@@ -155,6 +172,8 @@ def draw(canvas, data):
         polys = [poly for poly in newpolys if all(map(lambda p: XRANGE[0] <= p.x <= XRANGE[1] and YRANGE[0] <= p.y <= YRANGE[1], poly.points))]
     elif draw_mode == 'photo':
         polys = vor.polygons.values()
+    elif draw_mode == 'rectangles':
+        polys = vor
     else:
         polys = [gr.Polygon(tri.a, tri.b, tri.c) for tri in vor.triangles \
                     if all(map(lambda p: XRANGE[0] <= p.x <= XRANGE[1] and YRANGE[0] <= p.y <= YRANGE[1], [tri.a, tri.b, tri.c]))]
@@ -169,7 +188,7 @@ def draw(canvas, data):
 
     print("Areas: min={}, max={}, avg={}".format(minarea, maxarea, avgarea))
 
-    if draw_mode == 'photo':
+    if draw_mode in ('photo', 'rectangles'):
         for poly in polys:
             pts = [(pt.x-PADDING, pt.y-PADDING) for pt in poly.points]
             rs = gs = bs = cnt = 0
@@ -185,8 +204,9 @@ def draw(canvas, data):
                 color2 = utils.rgb_to_hex(*gr.offset_color((rs, gs, bs), 20))
                 canvas.draw_polygon(poly, fill=color, outline=color2)
                 if do_svg:
-                    grad = svgCanvas.create_gradient(color, color2)
-                    svgCanvas.draw_polygon(poly, fill=grad, stroke=color2)
+                    #grad = svgCanvas.create_gradient(color, color2)
+                    #svgCanvas.draw_polygon(poly, fill=grad, stroke=color2)
+                    svgCanvas.draw_polygon(poly, fill=color, stroke=color2)
     else:
         for poly in polys:
             area = abs(poly.area)
