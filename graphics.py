@@ -42,6 +42,7 @@ class SvgCanvas:
 
     def __init__(self, name):
         self.dwg = svgwrite.Drawing(name, profile='tiny')
+        self.gradient_ids = 0
 
     def draw_polygon(self, poly, **opts):
         def make_command(type, point):
@@ -53,6 +54,18 @@ class SvgCanvas:
 
     def draw_point(self, point, **opts):
         self.dwg.add(self.dwg.circle(center=(point.x, point.y), r=1, **opts))
+
+    def create_gradient(self, color1, color2):
+        self.gradient_ids += 1
+        gradient_name = "grad" + str(self.gradient_ids)
+
+        gradient = self.dwg.radialGradient((0.5,0.5), 0.5, id=gradient_name)
+        gradient.add_stop_color(0, color1)
+        gradient.add_stop_color(0.5, color2)
+        gradient.add_stop_color(1, color1)
+        self.dwg.add(gradient)
+
+        return "url(#{})".format(gradient_name)
 
     def save(self):
         self.dwg.save()

@@ -11,8 +11,6 @@ import graphics as gr
 import voronoi as vr
 import rasterizer as ras
 
-ids = 0
-
 ###########################################################################
 
 def setup_points():
@@ -212,16 +210,8 @@ def draw(canvas, data):
                 color2 = utils.rgb_to_hex(min(int(rs/cnt)+20,255),min(int(gs/cnt)+20,255),min(int(bs/cnt)+20,255))
                 canvas.draw_polygon(poly, fill=color, outline=color2)
                 if do_svg:
-                    global ids
-                    ids += 1
-                    gradName = "grad" + str(ids)
-                    grad = svgCanvas.dwg.radialGradient((0.5,0.5),0.5,id=gradName)
-                    grad.add_stop_color(0,color)
-                    grad.add_stop_color(0.5,color2)
-                    grad.add_stop_color(1,color)
-                    svgCanvas.dwg.add(grad)
-
-                    svgCanvas.draw_polygon(poly, fill="url(#"+gradName+")", stroke=color2)
+                    grad = svgCanvas.create_gradient(color, color2)
+                    svgCanvas.draw_polygon(poly, fill=grad, stroke=color2)
     else:
         for poly in polys:
             area = abs(poly.area)
