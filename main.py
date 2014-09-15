@@ -1,12 +1,12 @@
 import time
 import random
-import tkinter as tk
 import math
 
 import svgwrite
 from PIL import Image
 
 import utils
+import ui
 import graphics as gr
 import voronoi as vr
 import rasterizer as ras
@@ -73,32 +73,6 @@ PADDING = 11
 XRANGE = (PADDING, MAX_WIDTH - PADDING)
 YRANGE = (PADDING, MAX_HEIGHT - PADDING)
 
-class DrawingApp(tk.Frame):
-
-    def __init__(self, master=None):
-        tk.Frame.__init__(self, master)
-
-        self.pack(fill=tk.BOTH, expand=1)
-
-        canvas = tk.Canvas(self)
-        canvas.pack(fill=tk.BOTH, expand=1)
-        self.canvas = gr.MyCanvas(canvas)
-
-def createRoot(width, height, title='Drawing'):
-    root = tk.Tk()
-
-    screen_width = root.winfo_screenwidth()
-    screen_height = root.winfo_screenheight()
-
-    x = int((screen_width - width) / 2)
-    y = int((screen_height - height) / 2)
-
-    root.geometry("{}x{}+{}+{}".format(width, height, x, y))
-    root.resizable(width=tk.FALSE, height=tk.FALSE)
-    root.title(title)
-    root.iconbitmap('rabbit.ico')
-
-    return root
 
 def spiral_points(radius_i, radius_i2, turns):
     points = []
@@ -237,10 +211,9 @@ def draw(canvas, data):
 
 def main():
     data = calculate()
-    root = createRoot(MAX_WIDTH, MAX_HEIGHT)
-    app = DrawingApp(master=root)
+    app = ui.DrawingUi(MAX_WIDTH, MAX_HEIGHT)
     draw(app.canvas, data)
-    root.mainloop()
+    app.run()
 
 if __name__ == '__main__':
     main()
