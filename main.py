@@ -13,8 +13,10 @@ import rasterizer as ras
 
 ###########################################################################
 
-RECT_WIDTH = 20
-RECT_HEIGHT = 15
+RECT_WIDTH = 10
+RECT_HEIGHT = 10
+RECT_WPAD = 0
+RECT_HPAD = 0
 
 def setup_points():
     relaxation = 0
@@ -144,8 +146,10 @@ def calculate():
             vor.compact_polygons(XRANGE, YRANGE)
     else:
         vor = []
-        for x in range(XRANGE[0], XRANGE[1]-RECT_WIDTH+1, RECT_WIDTH):
-            for y in range(YRANGE[0], YRANGE[1]-RECT_HEIGHT+1, RECT_HEIGHT):
+        full_width = RECT_WIDTH + RECT_WPAD
+        full_height = RECT_HEIGHT + RECT_HPAD
+        for x in range(XRANGE[0], XRANGE[1]-full_width+1, full_width):
+            for y in range(YRANGE[0], YRANGE[1]-full_height+1, full_height):
                 poly = gr.Polygon(gr.Point(x, y),
                                   gr.Point(x + RECT_WIDTH, y),
                                   gr.Point(x + RECT_WIDTH, y + RECT_HEIGHT),
