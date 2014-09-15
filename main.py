@@ -11,6 +11,8 @@ import graphics as gr
 import voronoi as vr
 import rasterizer as ras
 
+ids = 0
+
 ###########################################################################
 
 def setup_points():
@@ -141,6 +143,7 @@ def grid_points(size):
     return points
 
 def init_photo(name):
+    global MAX_WIDTH, MAX_HEIGHT, XRANGE, YRANGE
     image = Image.open("imgs/" + name)
     MAX_WIDTH = image.size[0] + 2*(PADDING - 1)
     MAX_HEIGHT = image.size[1] + 2*(PADDING - 1)
@@ -168,7 +171,7 @@ def draw(canvas, data):
     (draw_mode, draw_points, area_bounds, outline_color, get_color, do_svg) = setup_drawing()
 
     if do_svg:
-        svgCanvas = gr.SvgCanvas("svg/" + time.strftime("%Y_%m_%d_%H_%M_%S.svg", time.localtime()) + ".svg")
+        svgCanvas = gr.SvgCanvas("svg/" + time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime()) + ".svg")
 
     if draw_mode == 'voronoi':
         polys = vor.polygons.values()
@@ -209,7 +212,16 @@ def draw(canvas, data):
                 color2 = utils.rgb_to_hex(min(int(rs/cnt)+20,255),min(int(gs/cnt)+20,255),min(int(bs/cnt)+20,255))
                 canvas.draw_polygon(poly, fill=color, outline=color2)
                 if do_svg:
-                    svgCanvas.draw_polygon(poly, fill=color, stroke=color2)
+                    global ids
+                    ids += 1
+                    gradName = "grad" + str(ids)
+                    grad = svgCanvas.dwg.radialGradient((0.5,0.5),0.5,id=gradName)
+                    grad.add_stop_color(0,color)
+                    grad.add_stop_color(0.5,color2)
+                    grad.add_stop_color(1,color)
+                    svgCanvas.dwg.add(grad)
+
+                    svgCanvas.draw_polygon(poly, fill="url(#"+gradName+")", stroke=color2)
     else:
         for poly in polys:
             area = abs(poly.area)
