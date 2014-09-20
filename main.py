@@ -7,14 +7,12 @@ import drawers as drs
 
 ###########################################################################
 
-def setup():
-    opts = {}
-
-    drs.init_size(670,670,11)
+def setup(opts):
+    drs.init_size(660,660,11)
     #opts["photo"] = drs.init_photo("oldtree.jpg")
 
     #random.seed(100)
-    opts["points"] = drs.random_points(100)
+    #opts["points"] = drs.random_points(100)
 
     #opts["points"] = drs.spiral_points(radius_i=0.8, radius_i2=0.02, turns=170)
     #opts["points"] = drs.spiral_points(radius_i=2, radius_i2=0, turns=170)
@@ -25,10 +23,36 @@ def setup():
 
     #opts["points"] = drs.grid_points(size=50)
 
+    opts["points"] = []
+    opts["points"].extend(drs.random_points(100,((0, 660),(0,220))))
+    opts["points"].extend(drs.random_points(100,((0, 660),(440,660))))
+    opts["points"].extend(drs.random_points(100,((0, 220),(220,440))))
+    opts["points"].extend(drs.random_points(100,((440, 660),(220,440))))
+    opts["points"].extend(drs.spiral_points(radius_i=2, radius_i2=0, turns=170))
+
+    # opts["points"] = []
+    # opts["points"].extend(drs.spiral_points(radius_i=2, radius_i2=0, turns=110, center=(165,165)))
+    # opts["points"].extend(drs.spiral_points(radius_i=2, radius_i2=0, turns=110, center=(165+330,165)))
+    # opts["points"].extend(drs.spiral_points(radius_i=2, radius_i2=0, turns=110, center=(165,165+330)))
+    # opts["points"].extend(drs.spiral_points(radius_i=2, radius_i2=0, turns=110, center=(165+330,165+330)))
+
+    # opts["points"] = []
+    # opts["points"].extend(drs.circle_points(radius_i=20, radius_i2=0, angle_fractions=9, turns=11, antisymm=0, center=(165,165)))
+    # opts["points"].extend(drs.circle_points(radius_i=20, radius_i2=0, angle_fractions=9, turns=11, antisymm=0, center=(165+330,165)))
+    # opts["points"].extend(drs.circle_points(radius_i=20, radius_i2=0, angle_fractions=9, turns=11, antisymm=0, center=(165,165+330)))
+    # opts["points"].extend(drs.circle_points(radius_i=20, radius_i2=0, angle_fractions=9, turns=11, antisymm=0, center=(165+330,165+330)))
+    # opts["points"].extend(drs.circle_points(radius_i=20, radius_i2=0, angle_fractions=9, turns=6, antisymm=0, center=(330,330)))
+
+    # opts["points"] = []
+    # opts["points"].extend(drs.spiral_points(radius_i=2, radius_i2=0, turns=110, center=(110,110)))
+    # opts["points"].extend(drs.spiral_points(radius_i=2, radius_i2=0, turns=180, center=(440,440)))
+    # opts["points"].extend(drs.random_points(100, ((230, 660),(0,210))))
+    # opts["points"].extend(drs.random_points(100, ((0, 210),(230,660))))
+
     opts["relaxation"] = 0
 
-    #opts["draw_mode"] = 'voronoi'
-    opts["draw_mode"] = 'tri-center'
+    opts["draw_mode"] = 'voronoi'
+    #opts["draw_mode"] = 'tri-center'
     #opts["draw_mode"] = 'tri-delaunay'
     #opts["draw_mode"] = 'rectangles'
 
@@ -45,8 +69,8 @@ def setup():
 
     opts["outline_color"] = None
 
-    #opts["outline_color"] = utils.rgb_to_hex(0,0,0)
-    #opts["get_color"] = lambda _: (255,255,255)
+    opts["outline_color"] = utils.rgb_to_hex(0,0,0)
+    opts["get_color"] = lambda _: (255,255,255)
 
     opts["get_color"] = gr.weighted_color((20,20,138), (140,140,198))
     opts["outline_color"] = utils.rgb_to_hex(20,20,138)
@@ -63,12 +87,11 @@ def setup():
     #opts["do_svg"] = True
     opts["do_svg"] = False
 
-    return opts
-
 ###########################################################################
 
 def main():
-    opts = setup()
+    opts = {}
+    setup(opts)
     drs.process(opts)
     app = ui.DrawingUi(drs.MAX_WIDTH, drs.MAX_HEIGHT)
     drs.flush(opts, app.canvas)

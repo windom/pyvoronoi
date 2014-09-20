@@ -9,14 +9,6 @@ import graphics as gr
 import voronoi as vr
 import rasterizer as ras
 
-
-MAX_WIDTH = 670
-MAX_HEIGHT = 670
-PADDING = 11
-
-XRANGE = (PADDING, MAX_WIDTH - PADDING)
-YRANGE = (PADDING, MAX_HEIGHT - PADDING)
-
 ##############################################################################
 # Size inits
 ##############################################################################
@@ -48,20 +40,24 @@ def init_ranges():
 # Point generators
 ##############################################################################
 
-def spiral_points(radius_i, radius_i2, turns):
+def spiral_points(radius_i, radius_i2, turns, center=None):
+    if center is None:
+        center = (MAX_WIDTH/2, MAX_HEIGHT/2)
     points = []
     angle = 0
     radius = 0
     for _ in range(turns):
-        pt = gr.Point(MAX_WIDTH/2 + math.cos(angle) * radius,
-                      MAX_HEIGHT/2 + math.sin(angle) * radius)
+        pt = gr.Point(center[0] + math.cos(angle) * radius,
+                      center[1] + math.sin(angle) * radius)
         angle += math.pi / 9
         radius += radius_i
         radius_i += radius_i2
         points.append(pt)
     return points
 
-def circle_points(radius_i, radius_i2, angle_fractions, turns, antisymm):
+def circle_points(radius_i, radius_i2, angle_fractions, turns, antisymm, center=None):
+    if center is None:
+        center = (MAX_WIDTH/2, MAX_HEIGHT/2)
     points = []
     iangle = 0
     iradius = radius_i
@@ -69,8 +65,8 @@ def circle_points(radius_i, radius_i2, angle_fractions, turns, antisymm):
         angle = iangle
         radius = iradius
         for _ in range(angle_fractions*2-antisymm):
-            pt = gr.Point(MAX_WIDTH/2 + math.cos(angle) * radius,
-                          MAX_HEIGHT/2 + math.sin(angle) * radius)
+            pt = gr.Point(center[0] + math.cos(angle) * radius,
+                          center[1] + math.sin(angle) * radius)
             angle += math.pi / angle_fractions
             radius += 0.001
             points.append(pt)
@@ -79,20 +75,28 @@ def circle_points(radius_i, radius_i2, angle_fractions, turns, antisymm):
         iangle += math.pi / (angle_fractions*2)
     return points
 
-def grid_points(size):
+def grid_points(size, ranges=None):
+    if ranges is None:
+        xrange, yrange = XRANGE, YRANGE
+    else:
+        xrange, yrange = ranges
     points = []
     dx = 0
-    for y in range(YRANGE[0], YRANGE[1], size):
+    for y in range(yrange[0], yrange[1], size):
         dx = size/2-dx
-        for x in range(XRANGE[0], XRANGE[1], size):
+        for x in range(xrange[0], xrange[1], size):
             points.append(gr.Point(x + dx, y))
     return points
 
-def random_points(count):
+def random_points(count, ranges=None):
+    if ranges is None:
+        xrange, yrange = XRANGE, YRANGE
+    else:
+        xrange, yrange = ranges
     def random_point(idx):
         return gr.Point(
-            random.uniform(XRANGE[0], XRANGE[1]),
-            random.uniform(YRANGE[0], YRANGE[1]),
+            random.uniform(xrange[0], xrange[1]),
+            random.uniform(yrange[0], yrange[1]),
             "p{}".format(idx))
     return [random_point(idx + 1) for idx in range(count)]
 
