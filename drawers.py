@@ -191,6 +191,7 @@ def draw(opts):
 
     if "photo" in opts:
         photo = opts["photo"]
+        gradient_fill = opts["photo_gradient"]
         for poly in polys:
             pts = [(pt.x-PADDING, pt.y-PADDING) for pt in poly.points]
             rs = gs = bs = cnt = 0
@@ -206,9 +207,11 @@ def draw(opts):
                 color2 = u.rgb_to_hex(*gr.offset_color((rs, gs, bs), 20))
                 canvas.draw_polygon(poly, fill=color, outline=color2)
                 if do_svg:
-                    #grad = svgCanvas.create_gradient(color, color2)
-                    #svg_canvas.draw_polygon(poly, fill=grad, stroke=color2)
-                    svg_canvas.draw_polygon(poly, fill=color, stroke=color2)
+                    if gradient_fill:
+                        grad = svg_canvas.create_gradient(color, color2)
+                        svg_canvas.draw_polygon(poly, fill=grad, stroke=color2)
+                    else:
+                        svg_canvas.draw_polygon(poly, fill=color, stroke=color2)
     else:
         area_bounds = opts["area_bounds"]
         minarea = opts["minarea"]

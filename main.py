@@ -57,6 +57,9 @@ def setup():
     #opts["get_color"] = gr.weighted_color((38,63,93), (184,210,221))
     #opts["outline_color"] = utils.rgb_to_hex(38,63,93)
 
+    #opts["photo_gradient"] = True
+    opts["photo_gradient"] = False
+
     #opts["do_svg"] = True
     opts["do_svg"] = False
 
