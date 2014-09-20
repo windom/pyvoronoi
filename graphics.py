@@ -1,5 +1,4 @@
 import math
-import random
 import svgwrite
 
 import utils as u
@@ -221,17 +220,6 @@ class Polygon:
     def __repr__(self):
         return "[pl {}]".format(self.points)
 
-
-def generate_points(count, xrange, yrange):
-    print("Generating", count, "points")
-
-    def random_point(idx):
-        return Point(
-            random.uniform(xrange[0], xrange[1]),
-            random.uniform(yrange[0], yrange[1]),
-            "p{}".format(idx))
-
-    return [random_point(idx + 1) for idx in range(count)]
 
 def weighted_color(from_rgb, to_rgb):
     def get_color(weight):
