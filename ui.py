@@ -1,7 +1,5 @@
 import tkinter as tk
 
-import graphics as gr
-
 class DrawingUi(tk.Frame):
 
     def __init__(self, width, height, title='Drawing'):
@@ -11,9 +9,8 @@ class DrawingUi(tk.Frame):
 
         self.pack(fill=tk.BOTH, expand=1)
 
-        canvas = tk.Canvas(self)
-        canvas.pack(fill=tk.BOTH, expand=1)
-        self.canvas = gr.MyCanvas(canvas)
+        self.canvas = tk.Canvas(self)
+        self.canvas.pack(fill=tk.BOTH, expand=1)
 
     def run(self):
         self.root.mainloop()

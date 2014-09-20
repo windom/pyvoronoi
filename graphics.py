@@ -4,34 +4,41 @@ import svgwrite
 import utils as u
 
 
-class MyCanvas:
+class MyCanvas(u.Deferrable):
 
-    def __init__(self, canvas):
+    def __init__(self, canvas=None):
+        super().__init__()
         self.canvas = canvas
 
+    @u.deferred
     def draw_point(self, point):
         radius = 1
         self.draw_circle(point, radius, fill=True)
         # self.canvas.create_text(point.x + radius, point.y - radius,
         #                         anchor=tk.SW, text=point.id)
 
+    @u.deferred
     def draw_line(self, source, dest):
         self.canvas.create_line(source.x, source.y,
                                 dest.x, dest.y)
 
+    @u.deferred
     def draw_edge(self, edge):
         self.draw_line(edge.p1, edge.p2)
 
+    @u.deferred
     def draw_circle(self, center, radius, fill=False):
         self.canvas.create_oval(
             center.x - radius, center.y - radius,
             center.x + radius, center.y + radius,
             fill=("black" if fill else None))
 
+    @u.deferred
     def draw_triangle(self, triangle):
         for edge in triangle.edges():
             self.draw_edge(edge)
 
+    @u.deferred
     def draw_polygon(self, poly, fill=None, outline=None):
         self.canvas.create_polygon(list(map(lambda point: (point.x, point.y), poly.points)),
                                    fill=fill, outline=outline)

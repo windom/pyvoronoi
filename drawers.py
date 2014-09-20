@@ -121,8 +121,11 @@ def uniform_rectangles(width, height, wpad, hpad):
 ##############################################################################
 
 def process(opts):
+    print("Begin processing")
     calculate(opts)
     postprocess(opts)
+    draw(opts)
+    print("Finished processing")
 
 def calculate(opts):
     if opts["draw_mode"] == "rectangles":
@@ -174,7 +177,10 @@ def postprocess(opts):
     opts["minarea"] = minarea
     opts["maxarea"] = maxarea
 
-def draw(opts, canvas):
+def draw(opts):
+    print("Drawing")
+
+    canvas = opts["canvas"] = gr.MyCanvas()
     polys = opts["polygons"]
     do_svg = opts["do_svg"]
 
@@ -231,3 +237,8 @@ def draw(opts, canvas):
 
     if do_svg:
         svg_canvas.save()
+
+def flush(opts, native_canvas):
+    canvas = opts["canvas"]
+    canvas.canvas = native_canvas
+    canvas.flush_calls()

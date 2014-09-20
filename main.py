@@ -68,7 +68,7 @@ def main():
     opts = setup()
     drs.process(opts)
     app = ui.DrawingUi(drs.MAX_WIDTH, drs.MAX_HEIGHT)
-    drs.draw(opts, app.canvas)
+    drs.flush(opts, app.canvas)
     app.run()
 
 if __name__ == '__main__':
