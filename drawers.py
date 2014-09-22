@@ -200,7 +200,7 @@ def draw(opts):
             pts = [(pt.x-PADDING, pt.y-PADDING) for pt in poly.points]
             rs = gs = bs = cnt = 0
             for x,y in ras.rasterize(pts):
-                r, g, b = photo[x,y]
+                r, g, b, *_ = photo[x,y]
                 rs += r
                 gs += g
                 bs += b
