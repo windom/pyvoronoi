@@ -23,12 +23,12 @@ def setup(opts):
 
     #opts["points"] = drs.grid_points(size=50)
 
-    opts["points"] = []
-    opts["points"].extend(drs.random_points(100,((0, 660),(0,220))))
-    opts["points"].extend(drs.random_points(100,((0, 660),(440,660))))
-    opts["points"].extend(drs.random_points(100,((0, 220),(220,440))))
-    opts["points"].extend(drs.random_points(100,((440, 660),(220,440))))
-    opts["points"].extend(drs.spiral_points(radius_i=2, radius_i2=0, turns=170))
+    # opts["points"] = []
+    # opts["points"].extend(drs.random_points(100,((0, 660),(0,220))))
+    # opts["points"].extend(drs.random_points(100,((0, 660),(440,660))))
+    # opts["points"].extend(drs.random_points(100,((0, 220),(220,440))))
+    # opts["points"].extend(drs.random_points(100,((440, 660),(220,440))))
+    # opts["points"].extend(drs.spiral_points(radius_i=2, radius_i2=0, turns=170))
 
     # opts["points"] = []
     # opts["points"].extend(drs.spiral_points(radius_i=2, radius_i2=0, turns=110, center=(165,165)))
@@ -55,6 +55,12 @@ def setup(opts):
     #opts["draw_mode"] = 'tri-center'
     #opts["draw_mode"] = 'tri-delaunay'
     #opts["draw_mode"] = 'rectangles'
+    #opts["draw_mode"] = 'circles'
+
+    opts["circles_distribution"] = [(15, 15, 30), (45, 1, 15)]
+    opts["circles_iterations"] = 100
+    opts["circles_separation"] = 0
+    opts["circles_postfix"] = True
 
     opts["rect_width"] = 10
     opts["rect_height"] = 10

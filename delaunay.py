@@ -1,6 +1,5 @@
 import math
 import itertools
-import time
 import collections
 
 import graphics as gr
@@ -21,12 +20,10 @@ class Delaunay:
         self.edge_map = {edge: [initial_tri] for edge in initial_tri.edges()}
 
         print("Inserting points")
-        tm = time.time()
-        progressbar = utils.make_progressbar(len(self.points))
+        progressbar = utils.make_progressbar(len(self.points), timeit=True)
         for point in self.points:
             self.insert_point(point)
             progressbar()
-        print("Insertion took", time.time() - tm, "seconds")
 
         print("Testing triangles")
         self.test_triangles()

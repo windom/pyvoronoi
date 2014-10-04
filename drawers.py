@@ -7,6 +7,7 @@ from PIL import Image
 import utils as u
 import graphics as gr
 import voronoi as vr
+import circles as cs
 import rasterizer as ras
 
 ##############################################################################
@@ -132,11 +133,19 @@ def process(opts):
     print("Finished processing")
 
 def calculate(opts):
-    if opts["draw_mode"] == "rectangles":
+    draw_mode = opts["draw_mode"]
+
+    if draw_mode == "rectangles":
         opts["rectangles"] = uniform_rectangles(opts["rect_width"],
                                                 opts["rect_height"],
                                                 opts["rect_wpad"],
                                                 opts["rect_hpad"])
+    elif draw_mode == "circles":
+        opts["circles"] = cs.circle_pack(opts["circles_distribution"],
+                                         opts["circles_iterations"],
+                                         opts["circles_separation"],
+                                         opts["circles_postfix"],
+                                         (MAX_WIDTH/2, MAX_HEIGHT/2))
     else:
         vor = vr.Voronoi(opts["points"])
         vor.process()
@@ -149,9 +158,13 @@ def calculate(opts):
 
         opts["voronoi"] = vor
 
+
 def postprocess(opts):
     draw_mode = opts["draw_mode"]
     vor = opts.get("voronoi", None)
+
+    if draw_mode == 'circles':
+        return
 
     if draw_mode == 'voronoi':
         polys = vor.polygons.values()
@@ -185,6 +198,12 @@ def draw(opts):
     print("Drawing")
 
     canvas = opts["canvas"] = gr.MyCanvas()
+
+    if opts["draw_mode"] == 'circles':
+        for p, radius in opts["circles"]:
+            canvas.draw_circle(p, radius)
+        return
+
     polys = opts["polygons"]
     do_svg = opts["do_svg"]
 

@@ -96,6 +96,9 @@ class Point(u.SimpleEq):
         dy = self.y - point.y
         return dx**2 + dy**2
 
+    def dist(self, point):
+        return math.sqrt(self.dist2(point))
+
     def __repr__(self):
         return "[{} ({:.0f},{:.0f})]".format(
             self.id,
