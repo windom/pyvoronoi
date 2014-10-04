@@ -1,6 +1,7 @@
 import binascii
 import struct
 import functools
+import time
 
 
 class SimpleEq:
@@ -14,15 +15,34 @@ class SimpleEq:
         return not self.__eq__(other)
 
 
-def make_progressbar(steps):
+def make_progressbar(steps, timeit=False):
     step = [0, 0]
+
+    if timeit:
+        ctime = time.time()
+        times = [ctime, ctime]
 
     def do_step():
         step[0] += 1
         percent = int(step[0]/steps*10)
         if percent > step[1]:
-            print("... {}/{} done".format(step[0], steps))
+            progress_msg = "... {}/{} done".format(step[0], steps)
             step[1] = percent
+
+            if timeit:
+                ctime = time.time()
+                section_time = ctime - times[1]
+                total_time = ctime-times[0]
+                remaining_time = total_time * (steps-step[0])/step[0]
+                times[1] = ctime
+
+                progress_msg += "\t\t\t{:.2f} secs, {:.2f} secs remaining" \
+                        .format(section_time, remaining_time)
+
+            print(progress_msg)
+
+            if timeit and step[0]== steps:
+                print("Processing took {:.2f} seconds".format(ctime-times[0]))
 
     return do_step
 
