@@ -68,4 +68,4 @@ def circle_pack(distributions, iterations, min_sep, postfix, pcenter):
                     circles[i] = (circles[i][0], circles[i][1], circles[i][2]-dr)
 
 
-    return [(gr.Point(cx, cy), r) for cx, cy, r in circles]
+    return [gr.Circle(gr.Point(cx, cy), r) for cx, cy, r in circles]

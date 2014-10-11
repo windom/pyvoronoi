@@ -6,7 +6,7 @@ def safediv(x,y):
     else:
         return x/y
 
-def rasterize(points):
+def rasterize_poly(points):
     edges = list(zip(points, points[1:] + points[0:1]))
 
     alist = [safediv(pt1[1]-pt2[1], pt1[0]-pt2[0]) for pt1, pt2 in edges]
@@ -38,3 +38,10 @@ def rasterize(points):
 
     for y in range(miny, maxy+1):
         yield from scanline(y)
+
+def rasterize_circle(center, radius):
+    radius2 = radius**2
+    for x in range(-radius, radius+1):
+        for y in range(-radius, radius+1):
+            if x**2 + y**2 <= radius2:
+                yield (center[0] + x, center[1] + y)

@@ -11,11 +11,8 @@ class MyCanvas(u.Deferrable):
         self.canvas = canvas
 
     @u.deferred
-    def draw_point(self, point):
-        radius = 1
-        self.draw_circle(point, radius, fill=True)
-        # self.canvas.create_text(point.x + radius, point.y - radius,
-        #                         anchor=tk.SW, text=point.id)
+    def draw_point(self, point, radius=1):
+        self.draw_circle(Circle(point, radius), fill="black")
 
     @u.deferred
     def draw_line(self, source, dest):
@@ -27,11 +24,12 @@ class MyCanvas(u.Deferrable):
         self.draw_line(edge.p1, edge.p2)
 
     @u.deferred
-    def draw_circle(self, center, radius, fill=False):
+    def draw_circle(self, circle, fill=None, outline=None):
+        center, radius = circle.center, circle.radius
         self.canvas.create_oval(
             center.x - radius, center.y - radius,
             center.x + radius, center.y + radius,
-            fill=("black" if fill else None))
+            fill=fill, outline=outline)
 
     @u.deferred
     def draw_triangle(self, triangle):
@@ -57,6 +55,10 @@ class SvgCanvas:
                     [make_command('L', point) for point in poly.points[1:]] + \
                     ['z']
         self.dwg.add(self.dwg.path(scommands, **opts))
+
+    def draw_circle(self, circle, **opts):
+        cx, cy, r = circle.center.x, circle.center.y, circle.radius
+        self.dwg.add(self.dwg.circle(center=(cx, cy), r=r, **opts))
 
     def draw_point(self, point, **opts):
         self.dwg.add(self.dwg.circle(center=(point.x, point.y), r=1, **opts))
@@ -201,6 +203,17 @@ class Triangle:
 
     def __repr__(self):
         return "[tr {}{}{}]".format(self.a, self.b, self.c)
+
+
+class Circle:
+
+    def __init__(self, center, radius):
+        self.center = center
+        self.radius = radius
+        self.area = math.pi * self.radius**2
+
+    def __repr__(self):
+        return "[cr {} {}]".format(self.center, self.radius)
 
 
 class Polygon:

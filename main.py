@@ -55,9 +55,10 @@ def setup(opts):
     #opts["draw_mode"] = 'tri-center'
     #opts["draw_mode"] = 'tri-delaunay'
     #opts["draw_mode"] = 'rectangles'
-    #opts["draw_mode"] = 'circles'
+    #opts["draw_mode"] = 'circles-pack'
 
-    opts["circles_distribution"] = [(15, 15, 30), (45, 1, 15)]
+    opts["circles_distribution"] = [(6, 15, 30), (18, 1, 15)]
+    #opts["circles_distribution"] = [(200, 10, 30)]
     opts["circles_iterations"] = 100
     opts["circles_separation"] = 0
     opts["circles_postfix"] = True
@@ -75,20 +76,20 @@ def setup(opts):
 
     opts["outline_color"] = None
 
-    opts["outline_color"] = utils.rgb_to_hex(0,0,0)
     opts["get_color"] = lambda _: (255,255,255)
+    opts["outline_color"] = (0,0,0)
 
     opts["get_color"] = gr.weighted_color((20,20,138), (140,140,198))
-    opts["outline_color"] = utils.rgb_to_hex(20,20,138)
+    opts["outline_color"] = (20,20,138)
 
     #opts["get_color"] = gr.weighted_color((236,57,50), (148,18,18))
-    #opts["outline_color"] = utils.rgb_to_hex(148,18,18)
+    #opts["outline_color"] = (148,18,18)
 
     #opts["get_color"] = gr.weighted_color((38,63,93), (184,210,221))
-    #opts["outline_color"] = utils.rgb_to_hex(38,63,93)
+    #opts["outline_color"] = (38,63,93)
 
-    #opts["photo_gradient"] = True
-    opts["photo_gradient"] = False
+    opts["outline_color_delta"] = None
+    #opts["outline_color_delta"] = 20
 
     #opts["do_svg"] = True
     opts["do_svg"] = False

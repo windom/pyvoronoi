@@ -136,16 +136,16 @@ def calculate(opts):
     draw_mode = opts["draw_mode"]
 
     if draw_mode == "rectangles":
-        opts["rectangles"] = uniform_rectangles(opts["rect_width"],
-                                                opts["rect_height"],
-                                                opts["rect_wpad"],
-                                                opts["rect_hpad"])
-    elif draw_mode == "circles":
-        opts["circles"] = cs.circle_pack(opts["circles_distribution"],
-                                         opts["circles_iterations"],
-                                         opts["circles_separation"],
-                                         opts["circles_postfix"],
-                                         (MAX_WIDTH/2, MAX_HEIGHT/2))
+        opts["polygons"] = uniform_rectangles(opts["rect_width"],
+                                              opts["rect_height"],
+                                              opts["rect_wpad"],
+                                              opts["rect_hpad"])
+    elif draw_mode == "circles-pack":
+        opts["polygons"] = cs.circle_pack(opts["circles_distribution"],
+                                          opts["circles_iterations"],
+                                          opts["circles_separation"],
+                                          opts["circles_postfix"],
+                                          (MAX_WIDTH/2, MAX_HEIGHT/2))
     else:
         vor = vr.Voronoi(opts["points"])
         vor.process()
@@ -163,9 +163,6 @@ def postprocess(opts):
     draw_mode = opts["draw_mode"]
     vor = opts.get("voronoi", None)
 
-    if draw_mode == 'circles':
-        return
-
     if draw_mode == 'voronoi':
         polys = vor.polygons.values()
     elif draw_mode == 'tri-center':
@@ -174,8 +171,8 @@ def postprocess(opts):
         for poly in polys:
             newpolys.extend([gr.Polygon(p1,p2,poly.centroid) for (p1,p2) in zip(poly.points, poly.points[1:] + poly.points[0:1])])
         polys = [poly for poly in newpolys if all(map(lambda p: XRANGE[0] <= p.x <= XRANGE[1] and YRANGE[0] <= p.y <= YRANGE[1], poly.points))]
-    elif draw_mode == 'rectangles':
-        polys = opts["rectangles"]
+    elif draw_mode in ('rectangles', 'circles-pack'):
+        polys = opts["polygons"]
     else:
         polys = [gr.Polygon(tri.a, tri.b, tri.c) for tri in vor.triangles \
                     if all(map(lambda p: XRANGE[0] <= p.x <= XRANGE[1] and YRANGE[0] <= p.y <= YRANGE[1], [tri.a, tri.b, tri.c]))]
@@ -199,11 +196,6 @@ def draw(opts):
 
     canvas = opts["canvas"] = gr.MyCanvas()
 
-    if opts["draw_mode"] == 'circles':
-        for p, radius in opts["circles"]:
-            canvas.draw_circle(p, radius)
-        return
-
     polys = opts["polygons"]
     do_svg = opts["do_svg"]
 
@@ -212,13 +204,43 @@ def draw(opts):
         print("Save SVG to:", svg_name)
         svg_canvas = gr.SvgCanvas(svg_name)
 
+    outline_color = opts["outline_color"]
+    outline_color_delta = opts["outline_color_delta"]
+
+    def draw_stuff(stuff, fill):
+        outline = outline_color
+        if not (outline_color_delta is None or fill is None):
+            outline = gr.offset_color(fill, outline_color_delta)
+
+        if not fill is None:
+            fill = u.rgb_to_hex(*fill)
+
+        if not outline is None:
+            outline = u.rgb_to_hex(*outline)
+
+        if isinstance(stuff, gr.Polygon):
+            canvas.draw_polygon(stuff, fill, outline)
+            if do_svg:
+                svg_canvas.draw_polygon(stuff, fill=fill, stroke=outline)
+        elif isinstance(stuff, gr.Circle):
+            canvas.draw_circle(stuff, fill, outline)
+            if do_svg:
+                svg_canvas.draw_circle(stuff, fill=fill, stroke=outline)
+
     if "photo" in opts:
         photo = opts["photo"]
-        gradient_fill = opts["photo_gradient"]
+
+        def rasterize_stuff(stuff):
+            if isinstance(stuff, gr.Polygon):
+                pts = [(pt.x-PADDING, pt.y-PADDING) for pt in poly.points]
+                return ras.rasterize_poly(pts)
+            elif isinstance(stuff, gr.Circle):
+                return ras.rasterize_circle((poly.center.x, poly.center.y),
+                                            int(poly.radius))
+
         for poly in polys:
-            pts = [(pt.x-PADDING, pt.y-PADDING) for pt in poly.points]
             rs = gs = bs = cnt = 0
-            for x,y in ras.rasterize(pts):
+            for x,y in rasterize_stuff(poly):
                 r, g, b, *_ = photo[x,y]
                 rs += r
                 gs += g
@@ -226,33 +248,20 @@ def draw(opts):
                 cnt += 1
             if cnt > 0:
                 rs, gs, bs = int(rs/cnt), int(gs/cnt), int (bs/cnt)
-                color = u.rgb_to_hex(rs, gs, bs)
-                color2 = u.rgb_to_hex(*gr.offset_color((rs, gs, bs), 20))
-                canvas.draw_polygon(poly, fill=color, outline=color2)
-                if do_svg:
-                    if gradient_fill:
-                        grad = svg_canvas.create_gradient(color, color2)
-                        svg_canvas.draw_polygon(poly, fill=grad, stroke=color2)
-                    else:
-                        svg_canvas.draw_polygon(poly, fill=color, stroke=color2)
+                draw_stuff(poly, (rs,gs,bs))
     else:
         area_bounds = opts["area_bounds"]
         minarea = opts["minarea"]
         maxarea = opts["maxarea"]
-        outline_color = opts["outline_color"]
         get_color = opts["get_color"]
 
         for poly in polys:
             area = abs(poly.area)
             if (not area_bounds) or (area_bounds[0] <= area <= area_bounds[1]):
                 weight = (area - minarea) / (maxarea - minarea)
-                canvas.draw_polygon(poly, fill=u.rgb_to_hex(*get_color(weight)), outline=outline_color)
-                if do_svg:
-                    svg_canvas.draw_polygon(poly, fill=u.rgb_to_hex(*get_color(weight)), stroke=outline_color)
+                draw_stuff(poly, get_color(weight))
             else:
-                canvas.draw_polygon(poly, fill="#ffffff", outline=outline_color)
-                if do_svg:
-                    svg_canvas.draw_polygon(poly, fill="#ffffff", stroke=outline_color)
+                draw_stuff(poly, (255,255,255))
 
     if opts["draw_points"]:
         vor = opts["voronoi"]
