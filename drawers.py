@@ -141,18 +141,11 @@ def calculate(opts):
                                               opts["rect_wpad"],
                                               opts["rect_hpad"])
     elif draw_mode == "circles-pack":
-        opts["polygons"] = cs.circle_pack(opts["circles_pack_distribution"],
-                                          opts["circles_pack_iterations"],
-                                          opts["circles_pack_separation"],
-                                          opts["circles_pack_postfix"],
+        opts["polygons"] = cs.circle_pack(opts["circles_distribution"],
+                                          opts["circles_iterations"],
+                                          opts["circles_separation"],
+                                          opts["circles_postfix"],
                                           (MAX_WIDTH/2, MAX_HEIGHT/2))
-    elif draw_mode == "circles-fill":
-        opts["polygons"] = cs.circle_fill((XRANGE, YRANGE),
-                                          opts["circles_fill_count"],
-                                          opts["circles_fill_min_radius"],
-                                          opts["circles_fill_max_radius"],
-                                          opts["circles_fill_decay"],
-                                          opts["circles_fill_postfix"])
     else:
         vor = vr.Voronoi(opts["points"])
         vor.process()
@@ -178,7 +171,7 @@ def postprocess(opts):
         for poly in polys:
             newpolys.extend([gr.Polygon(p1,p2,poly.centroid) for (p1,p2) in zip(poly.points, poly.points[1:] + poly.points[0:1])])
         polys = [poly for poly in newpolys if all(map(lambda p: XRANGE[0] <= p.x <= XRANGE[1] and YRANGE[0] <= p.y <= YRANGE[1], poly.points))]
-    elif draw_mode in ('rectangles', 'circles-pack', 'circles-fill'):
+    elif draw_mode in ('rectangles', 'circles-pack'):
         polys = opts["polygons"]
     else:
         polys = [gr.Polygon(tri.a, tri.b, tri.c) for tri in vor.triangles \
