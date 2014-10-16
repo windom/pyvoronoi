@@ -56,12 +56,19 @@ def setup(opts):
     #opts["draw_mode"] = 'tri-delaunay'
     #opts["draw_mode"] = 'rectangles'
     #opts["draw_mode"] = 'circles-pack'
+    #opts["draw_mode"] = 'circles-fill'
 
-    opts["circles_distribution"] = [(6, 15, 30), (18, 1, 15)]
-    #opts["circles_distribution"] = [(200, 10, 30)]
-    opts["circles_iterations"] = 100
-    opts["circles_separation"] = 0
-    opts["circles_postfix"] = True
+    opts["circles_pack_distribution"] = [(6, 15, 30), (18, 1, 15)]
+    #opts["circles_pack_distribution"] = [(200, 10, 30)]
+    opts["circles_pack_iterations"] = 100
+    opts["circles_pack_separation"] = 0
+    opts["circles_pack_postfix"] = True
+
+    opts["circles_fill_count"] = 2500
+    opts["circles_fill_min_radius"] = 2
+    opts["circles_fill_max_radius"] = 100
+    opts["circles_fill_decay"] = 'log'
+    opts["circles_fill_postfix"] = True
 
     opts["rect_width"] = 10
     opts["rect_height"] = 10
