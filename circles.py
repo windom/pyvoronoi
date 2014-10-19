@@ -107,7 +107,9 @@ def circle_fill(ranges, circle_count, minrad, maxrad, decay, postfix):
     return circles
 
 
-def circle_pack(distributions, iterations, min_sep, postfix, pcenter):
+def circle_pack(distributions, iterations, min_sep, postfix, ranges):
+    pcenter = ((ranges[0][1] - ranges[0][0])/2,
+               (ranges[1][1] - ranges[1][0])/2)
     circles = []
 
     for count, min_radius, max_radius in distributions:
@@ -169,5 +171,10 @@ def circle_pack(distributions, iterations, min_sep, postfix, pcenter):
                     circles[j] = (circles[j][0], circles[j][1], circles[j][2]-dr)
                     circles[i] = (circles[i][0], circles[i][1], circles[i][2]-dr)
 
+    def circle_inside(cx, cy, r):
+        return ranges[0][0] <= (cx - r) <= ranges[0][1] and \
+            ranges[0][0] <= (cx + r) <= ranges[0][1] and \
+            ranges[1][0] <= (cy - r) <= ranges[1][1] and \
+            ranges[1][0] <= (cy + r) <= ranges[1][1]
 
-    return [gr.Circle(gr.Point(cx, cy), r) for cx, cy, r in circles]
+    return [gr.Circle(gr.Point(cx, cy), r) for cx, cy, r in circles if circle_inside(cx, cy, r)]

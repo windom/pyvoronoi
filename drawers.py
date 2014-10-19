@@ -145,7 +145,7 @@ def calculate(opts):
                                           opts["circles_pack_iterations"],
                                           opts["circles_pack_separation"],
                                           opts["circles_pack_postfix"],
-                                          (MAX_WIDTH/2, MAX_HEIGHT/2))
+                                          (XRANGE, YRANGE))
     elif draw_mode == "circles-fill":
         opts["polygons"] = cs.circle_fill((XRANGE, YRANGE),
                                           opts["circles_fill_count"],
