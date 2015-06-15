@@ -93,6 +93,19 @@ class Point(u.SimpleEq):
             self.y + factor * point.y,
             id)
 
+    def rotate(self, angle, around=None):
+        x, y = self.x, self.y
+        if not around is None:
+            x -= around.x
+            y -= around.y
+        cangle = math.cos(angle)
+        sangle = math.sin(angle)
+        x, y = x*cangle - y*sangle, x*sangle + y*cangle
+        if not around is None:
+            x += around.x
+            y += around.y
+        return Point(x, y)
+
     def dist2(self, point):
         dx = self.x - point.x
         dy = self.y - point.y
@@ -212,6 +225,9 @@ class Circle:
         self.radius = radius
         self.area = math.pi * self.radius**2
 
+    def intersects(self, other):
+        return self.center.dist2(other.center) < (self.radius + other.radius)**2
+
     def __repr__(self):
         return "[cr {} {}]".format(self.center, self.radius)
 
@@ -220,25 +236,61 @@ class Polygon:
 
     def __init__(self, *points):
         self.points = list(points)
-        self.calc_area()
-        self.calc_centroid()
 
-    def calc_area(self):
-        self.area = sum([(p.x*pp.y - pp.x*p.y) for (p, pp) in
-                        zip(self.points, self.points[1:] + self.points[0:1])]) / 2
+    @u.lazy_property
+    def area(self):
+        return sum((p.x*pp.y - pp.x*p.y) for (p, pp) in self.point_edges()) / 2
 
-    def calc_centroid(self):
+    @u.lazy_property
+    def centroid(self):
         #
         # TODO: degenerate polygons should be handled properly
         #
         if self.area == 0:
-            self.centroid = self.points[0]
-            return
-        cx = sum([(p.x + pp.x)*(p.x*pp.y - pp.x*p.y) for (p, pp) in
-                  zip(self.points, self.points[1:] + self.points[0:1])])
-        cy = sum([(p.y + pp.y)*(p.x*pp.y - pp.x*p.y) for (p, pp) in
-                  zip(self.points, self.points[1:] + self.points[0:1])])
-        self.centroid = Point(cx / (6 * self.area), cy / (6 * self.area))
+            return self.points[0]
+        cx = sum((p.x + pp.x)*(p.x*pp.y - pp.x*p.y) for (p, pp) in self.point_edges())
+        cy = sum((p.y + pp.y)*(p.x*pp.y - pp.x*p.y) for (p, pp) in self.point_edges())
+        return Point(cx / (6 * self.area), cy / (6 * self.area))
+
+    def contains(self, point):
+        #
+        # taken from: http://geomalgorithms.com/a03-_inclusion.html
+        #
+        def is_left(p, l1, l2):
+            return (l1.x - p.x)*(l2.y - p.y) - (l2.x -  p.x)*(l1.y - p.y)
+        #
+        # calculate winding number
+        #
+        wn = 0
+        for e1, e2 in self.point_edges():
+            if e1.y <= point.y:
+                if e2.y > point.y and is_left(e1, e2, point) > 0:
+                    wn += 1
+            else:
+                if e2.y <= point.y and is_left(e1, e2, point) < 0:
+                    wn -= 1
+        return wn != 0
+
+    def scale(self, factor, center=None):
+        if center is None:
+            center = self.centroid
+
+        def scale_point(p):
+            return Point((p.x - center.x)*factor + center.x,
+                         (p.y - center.y)*factor + center.y)
+
+        return type(self)(*(scale_point(p) for p in self.points))
+
+    def rotate(self, angle, center=None):
+        if center is None:
+            center = self.centroid
+        return type(self)(*(p.rotate(angle, center) for p in self.points))
+
+    def translate(self, transl):
+        return type(self)(*(p.add(transl) for p in self.points))
+
+    def point_edges(self):
+        return zip(self.points, self.points[1:] + self.points[0:1])
 
     def __repr__(self):
         return "[pl {}]".format(self.points)

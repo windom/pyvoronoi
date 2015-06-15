@@ -51,6 +51,18 @@ def rgb_to_hex(*rgb):
     return "#" + binascii.hexlify(struct.pack('BBB', *rgb)).decode('ascii')
 
 
+class lazy_property:
+    def __init__(self, func):
+        self.func = func
+        self.func_name = func.__name__
+
+    def __get__(self, obj, cls):
+        if obj is None:
+            return None
+        value = self.func(obj)
+        setattr(obj, self.func_name, value)
+        return value
+
 def deferred(func):
     @functools.wraps(func)
     def decorated(*args, **kwargs):

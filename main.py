@@ -4,6 +4,7 @@ import utils
 import ui
 import graphics as gr
 import drawers as drs
+import riemann as rm
 
 ###########################################################################
 
@@ -11,8 +12,8 @@ def setup(opts):
     drs.init_size(660,660,11)
     #opts["photo"] = drs.init_photo("oldtree.jpg")
 
-    #random.seed(100)
-    #opts["points"] = drs.random_points(100)
+    random.seed(100)
+    opts["points"] = drs.random_points(100)
 
     #opts["points"] = drs.spiral_points(radius_i=0.8, radius_i2=0.02, turns=170)
     #opts["points"] = drs.spiral_points(radius_i=2, radius_i2=0, turns=170)
@@ -57,6 +58,7 @@ def setup(opts):
     #opts["draw_mode"] = 'rectangles'
     #opts["draw_mode"] = 'circles-pack'
     #opts["draw_mode"] = 'circles-fill'
+    #opts["draw_mode"] = 'riemann-fill'
 
     opts["circles_pack_distribution"] = [(6, 15, 30), (18, 1, 15)]
     #opts["circles_pack_distribution"] = [(200, 10, 30)]
@@ -69,6 +71,16 @@ def setup(opts):
     opts["circles_fill_max_radius"] = 100
     opts["circles_fill_decay"] = 'log'
     opts["circles_fill_postfix"] = True
+
+    opts["riemann_fill_exp"] = 1.1
+    opts["riemann_fill_rotation"] = 1
+    opts["riemann_fill_iterations"] = 5000
+    #opts["riemann_fill_shape_maker"] = rm.circle_maker()
+    #opts["riemann_fill_shape_maker"] = rm.poly_maker((0,0), (1,0), (1,1), (0, 1))
+    #opts["riemann_fill_shape_maker"] = rm.poly_maker((0,0), (1.618, 0), (1.618, 1), (0, 1))
+    #opts["riemann_fill_shape_maker"] = rm.poly_maker((1,0), (2,0), (2,1), (3,1), (3,2), (2,2), (2,3), (1,3), (1,2), (0,2), (0,1), (1,1))
+    #opts["riemann_fill_shape_maker"] = rm.poly_maker((0,0), (0.5,0.866), (-0.5,0.866))
+    #opts["riemann_fill_shape_maker"] = rm.poly_maker((0,0), (1-0.25,0), (1-0.25,1+0.25), (2,1+0.25), (2,2), (0,2))
 
     opts["rect_width"] = 10
     opts["rect_height"] = 10

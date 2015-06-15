@@ -9,6 +9,7 @@ import graphics as gr
 import voronoi as vr
 import circles as cs
 import rasterizer as ras
+import riemann as rm
 
 ##############################################################################
 # Size inits
@@ -153,6 +154,12 @@ def calculate(opts):
                                           opts["circles_fill_max_radius"],
                                           opts["circles_fill_decay"],
                                           opts["circles_fill_postfix"])
+    elif draw_mode == "riemann-fill":
+        opts["polygons"] = rm.fill((XRANGE,YRANGE),
+                                   opts["riemann_fill_exp"],
+                                   opts["riemann_fill_rotation"],
+                                   opts["riemann_fill_iterations"],
+                                   opts["riemann_fill_shape_maker"])
     else:
         vor = vr.Voronoi(opts["points"])
         vor.process()
@@ -176,9 +183,9 @@ def postprocess(opts):
         polys = vor.polygons.values()
         newpolys = []
         for poly in polys:
-            newpolys.extend([gr.Polygon(p1,p2,poly.centroid) for (p1,p2) in zip(poly.points, poly.points[1:] + poly.points[0:1])])
+            newpolys.extend([gr.Polygon(p1,p2,poly.centroid) for (p1,p2) in poly.point_edges()])
         polys = [poly for poly in newpolys if all(map(lambda p: XRANGE[0] <= p.x <= XRANGE[1] and YRANGE[0] <= p.y <= YRANGE[1], poly.points))]
-    elif draw_mode in ('rectangles', 'circles-pack', 'circles-fill'):
+    elif draw_mode in ('rectangles', 'circles-pack', 'circles-fill', 'riemann-fill'):
         polys = opts["polygons"]
     else:
         polys = [gr.Polygon(tri.a, tri.b, tri.c) for tri in vor.triangles \
@@ -245,14 +252,18 @@ def draw(opts):
                 return ras.rasterize_circle((poly.center.x, poly.center.y),
                                             int(poly.radius))
 
+        photo_x = MAX_WIDTH - 2*(PADDING - 1) - 1
+        photo_y = MAX_HEIGHT - 2*(PADDING - 1) - 1
+
         for poly in polys:
             rs = gs = bs = cnt = 0
             for x,y in rasterize_stuff(poly):
-                r, g, b, *_ = photo[x,y]
-                rs += r
-                gs += g
-                bs += b
-                cnt += 1
+                if 0 <= x <= photo_x and 0 <= y <= photo_y:
+                    r, g, b, *_ = photo[x,y]
+                    rs += r
+                    gs += g
+                    bs += b
+                    cnt += 1
             if cnt > 0:
                 rs, gs, bs = int(rs/cnt), int(gs/cnt), int (bs/cnt)
                 draw_stuff(poly, (rs,gs,bs))
